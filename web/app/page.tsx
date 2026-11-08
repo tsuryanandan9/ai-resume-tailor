@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { pdf } from "@react-pdf/renderer";
 import ResumePDF from "./ResumePDF";
 import { analyzeATS } from "./atsAnalyzer";
@@ -34,9 +34,37 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [fontSize, setFontSize] = useState(9.2);
+  const [margin, setMargin] = useState(22);
+  const [previewError, setPreviewError] = useState("");
   const [error, setError] = useState("");
   const [savedProfile, setSavedProfile] =
     useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (!savedProfile || !resume) {
+      setPreviewUrl("");
+      return;
+    }
+    let disposed = false;
+    let objectUrl = "";
+    setPreviewError("");
+    pdf(<ResumePDF profile={savedProfile} resume={resume} fontSize={fontSize} margin={margin} />)
+      .toBlob()
+      .then((blob) => {
+        if (disposed) return;
+        objectUrl = URL.createObjectURL(blob);
+        setPreviewUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!disposed) setPreviewError("Unable to render PDF preview.");
+      });
+    return () => {
+      disposed = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [savedProfile, resume, fontSize, margin]);
 
   const atsResult =
     resume.trim() && generatedJD.trim()
@@ -165,6 +193,8 @@ export default function Home() {
         <ResumePDF
           profile={savedProfile}
           resume={resume}
+          fontSize={fontSize}
+          margin={margin}
         />
       ).toBlob();
 
@@ -368,9 +398,33 @@ export default function Home() {
                 Generated Resume Draft
               </h2>
 
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-7">
-                {resume}
-              </pre>
+              {savedProfile && (
+                <div className="space-y-4">
+                  <div className="grid gap-4 rounded-lg border bg-slate-50 p-4 sm:grid-cols-2">
+                    <label className="text-sm font-medium">
+                      Font size: {fontSize.toFixed(1)} pt
+                      <input aria-label="Resume font size" type="range" min="8" max="11" step="0.2" value={fontSize}
+                        onChange={(event) => setFontSize(Number(event.target.value))} className="mt-2 w-full" />
+                    </label>
+                    <label className="text-sm font-medium">
+                      Page margins: {margin} pt
+                      <input aria-label="Resume margins" type="range" min="16" max="40" step="1" value={margin}
+                        onChange={(event) => setMargin(Number(event.target.value))} className="mt-2 w-full" />
+                    </label>
+                  </div>
+                  {previewError && <p className="text-red-600">{previewError}</p>}
+                  {previewUrl ? (
+                    <iframe title="Live resume PDF preview" src={previewUrl}
+                      className="h-[850px] w-full rounded-lg border border-gray-200 bg-white" />
+                  ) : (
+                    <p className="text-gray-500">Preparing your formatted resume preview...</p>
+                  )}
+                  <details className="rounded-lg border p-3">
+                    <summary className="cursor-pointer font-medium">View generated resume text</summary>
+                    <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-6">{resume}</pre>
+                  </details>
+                </div>
+              )}
 
               {/* PDF Preview */}
               {savedProfile && (
