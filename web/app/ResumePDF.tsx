@@ -168,7 +168,7 @@ function clean(text: string) {
 // Emphasize matching technologies without inserting HTML into the PDF.
 const technicalTerms = ["Python","Django","FastAPI","Flask","React.js","React","TypeScript","JavaScript","PostgreSQL","MySQL","MongoDB","AWS","Docker","CI/CD","GitHub Actions","REST APIs","RESTful APIs","Microservices","OAuth 2.0","JWT","PyTest","Azure","Java","SQL","C#",".NET","Git","API Management","SAP CPI","Microsoft Azure Integration Services"];
 function RichText({ value }: { value: string }) {
-  const escaped = technicalTerms.map((term) => term.split("").map((ch) => "\\^$.*+?()[]{}|".includes(ch) ? "\\\\" + ch : ch).join(""));
+  const escaped = technicalTerms.map((term) => term.split("").map((ch) => "\\^$.*+?()[]{}|".includes(ch) ? String.fromCharCode(92) + ch : ch).join("")); 
   const pattern = new RegExp("(" + escaped.join("|") + ")", "gi");
   return <Text>{value.split(pattern).map((part, i) =>
     technicalTerms.some((term) => term.toLowerCase() === part.toLowerCase())
