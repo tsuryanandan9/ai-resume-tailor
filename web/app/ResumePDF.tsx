@@ -177,10 +177,6 @@ function RichText({ value }: { value: string }) {
   )}</Text>;
 }
 
-function SectionHeading({")).join("|") + ")", "gi");
-  return <Text>{value.split(pattern).map((part, i) => technicalTerms.some((term) => term.toLowerCase() === part.toLowerCase()) ? <Text key={i} style={{ fontFamily: "Helvetica-Bold" }}>{part}</Text> : <Text key={i}>{part}</Text>)}</Text>;
-}
-
 function SectionHeading({
   title,
 }: {
