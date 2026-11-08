@@ -30,6 +30,8 @@ type Profile = {
 type Props = {
   profile: Profile;
   resume: string;
+  fontSize?: number;
+  margin?: number;
 };
 
 const styles = StyleSheet.create({
@@ -62,6 +64,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 7,
     marginBottom: 3,
+    borderBottomWidth: 0.7,
+    borderBottomColor: "#111111",
+    paddingBottom: 2,
   },
   paragraph: {
     fontSize: 9.2,
@@ -159,6 +164,14 @@ function clean(text: string) {
     .trim();
 }
 
+
+// Emphasize matching technologies without inserting HTML into the PDF.
+const technicalTerms = ["Python","Django","FastAPI","Flask","React.js","React","TypeScript","JavaScript","PostgreSQL","MySQL","MongoDB","AWS","Docker","CI/CD","GitHub Actions","REST APIs","RESTful APIs","Microservices","OAuth 2.0","JWT","PyTest","Azure","Java","SQL","C#",".NET","Git","API Management","SAP CPI","Microsoft Azure Integration Services"];
+function RichText({ value }: { value: string }) {
+  const pattern = new RegExp("(" + technicalTerms.map((term) => term.replace(/[.*+?^\x24{}()|[\]\\]/g, "\\function SectionHeading({")).join("|") + ")", "gi");
+  return <Text>{value.split(pattern).map((part, i) => technicalTerms.some((term) => term.toLowerCase() === part.toLowerCase()) ? <Text key={i} style={{ fontFamily: "Helvetica-Bold" }}>{part}</Text> : <Text key={i}>{part}</Text>)}</Text>;
+}
+
 function SectionHeading({
   title,
 }: {
@@ -174,6 +187,8 @@ function SectionHeading({
 export default function ResumePDF({
   profile,
   resume,
+  fontSize = 9.2,
+  margin = 22,
 }: Props) {
   const sections = parseSections(resume);
 
@@ -252,7 +267,7 @@ export default function ResumePDF({
       title={`${profile.fullName} - ${targetTitle}`}
       author={profile.fullName}
     >
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, { fontSize, paddingTop: margin, paddingBottom: margin, paddingHorizontal: margin }]}>
         <View style={styles.header}>
           <Text style={styles.name}>
             {profile.fullName.trim().replace(/\s+/g, " ")} - {targetTitle}
@@ -271,7 +286,7 @@ export default function ResumePDF({
           <View>
             <SectionHeading title="PROFESSIONAL SUMMARY" />
             <Text style={styles.paragraph}>
-              {summary}
+              <RichText value={summary} />
             </Text>
           </View>
         )}
@@ -339,7 +354,7 @@ export default function ResumePDF({
                     {"\u2022"}
                   </Text>
                   <Text style={styles.bulletText}>
-                    {bullet}
+                    <RichText value={bullet} />
                   </Text>
                 </View>
               ))}
