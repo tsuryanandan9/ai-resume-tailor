@@ -168,7 +168,16 @@ function clean(text: string) {
 // Emphasize matching technologies without inserting HTML into the PDF.
 const technicalTerms = ["Python","Django","FastAPI","Flask","React.js","React","TypeScript","JavaScript","PostgreSQL","MySQL","MongoDB","AWS","Docker","CI/CD","GitHub Actions","REST APIs","RESTful APIs","Microservices","OAuth 2.0","JWT","PyTest","Azure","Java","SQL","C#",".NET","Git","API Management","SAP CPI","Microsoft Azure Integration Services"];
 function RichText({ value }: { value: string }) {
-  const pattern = new RegExp("(" + technicalTerms.map((term) => term.replace(/[.*+?^\x24{}()|[\]\\]/g, "\\function SectionHeading({")).join("|") + ")", "gi");
+  const escaped = technicalTerms.map((term) => term.split("").map((ch) => "\\^$.*+?()[]{}|".includes(ch) ? "\\\\" + ch : ch).join(""));
+  const pattern = new RegExp("(" + escaped.join("|") + ")", "gi");
+  return <Text>{value.split(pattern).map((part, i) =>
+    technicalTerms.some((term) => term.toLowerCase() === part.toLowerCase())
+      ? <Text key={i} style={{ fontFamily: "Helvetica-Bold" }}>{part}</Text>
+      : <Text key={i}>{part}</Text>
+  )}</Text>;
+}
+
+function SectionHeading({")).join("|") + ")", "gi");
   return <Text>{value.split(pattern).map((part, i) => technicalTerms.some((term) => term.toLowerCase() === part.toLowerCase()) ? <Text key={i} style={{ fontFamily: "Helvetica-Bold" }}>{part}</Text> : <Text key={i}>{part}</Text>)}</Text>;
 }
 
